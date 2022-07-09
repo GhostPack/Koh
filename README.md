@@ -2,7 +2,7 @@
 
 ----
 
-Koh is a C# and and Beacon Object File (BOF) toolset that allows for the capture of user credential material via purposeful token/logon session leakage.
+Koh is a C# and Beacon Object File (BOF) toolset that allows for the capture of user credential material via purposeful token/logon session leakage.
 
 Some code was inspired by [Elad Shamir](https://twitter.com/elad_shamir)'s [Internal-Monologue](https://github.com/eladshamir/Internal-Monologue) project (no license), as well as [KB180548](https://mskb.pkisolutions.com/kb/180548). For why this is possible and Koh's approeach, see the [Technical Background](#technical-background) section of this README.
 
