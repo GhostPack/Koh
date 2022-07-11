@@ -46,7 +46,7 @@ The Koh "server" captures tokens and uses named pipes for control/communication.
 
 We are not planning on releasing binaries for Koh, so you will have to compile yourself :)
 
-Koh has been built against .NET 4.7.2 and is compatible with Visual Studio 2019 Community Edition. Simply open up the project .sln, choose "Release", and build. The `Koh.exe` assembly and `Koh.bin` [Donut-built](https://github.com/TheWover/donut) PIC will be be output to the main directory. The Donut blob is both x86/x64 compatible, and is built with the following options using v0.9.3 of Donut at `./Misc/Donut.exe`:
+Koh has been built against .NET 4.7.2 and is compatible with Visual Studio 2019 Community Edition. Simply open up the project .sln, choose "Release", and build. The `Koh.exe` assembly and `Koh.bin` [Donut-built](https://github.com/TheWover/donut) PIC will be output to the main directory. The Donut blob is both x86/x64 compatible, and is built with the following options using v0.9.3 of Donut at `./Misc/Donut.exe`:
 
 ```
   [ Instance type : Embedded
