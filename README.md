@@ -368,7 +368,7 @@ beacon> shell dir \\dc.theshire.local\C$
 
 ## Technical Background
 
-When a new logon session is estabslished on a system, a new token for the logon session is created by LSASS using the NtCreateToken() API call and returned by to the caller of LsaLogonUser(). This [increases the ReferenceCount](https://systemroot.gitee.io/pages/apiexplorer/d0/d9/rmlogon_8c-source.html#l00278) field of the logon session kernel structure. When this ReferenceCount reaches 0, the logon session is destroyed. Because of the information described in the [Why This Is Possible](#why-this-is-possible) section, Windows systems **will NOT** release a logon session if a token handle still exists to it (and therefore the reference count != 0).
+When a new logon session is estabslished on a system, a new token for the logon session is created by LSASS using the NtCreateToken() API call and returned by the caller of LsaLogonUser(). This [increases the ReferenceCount](https://systemroot.gitee.io/pages/apiexplorer/d0/d9/rmlogon_8c-source.html#l00278) field of the logon session kernel structure. When this ReferenceCount reaches 0, the logon session is destroyed. Because of the information described in the [Why This Is Possible](#why-this-is-possible) section, Windows systems **will NOT** release a logon session if a token handle still exists to it (and therefore the reference count != 0).
 
 So if we can get a handle to a newly created logon session via a token, we can keep that logon session open and later impersonate that token to utilize any cached credentials it contains.
 
