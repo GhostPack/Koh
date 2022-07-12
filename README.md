@@ -46,7 +46,7 @@ The Koh "server" captures tokens and uses named pipes for control/communication.
 
 We are not planning on releasing binaries for Koh, so you will have to compile yourself :)
 
-Koh has been built against .NET 4.7.2 and is compatible with Visual Studio 2019 Community Edition. Simply open up the project .sln, choose "Release", and build. The `Koh.exe` assembly and `Koh.bin` [Donut-built](https://github.com/TheWover/donut) PIC will be be output to the main directory. The Donut blob is both x86/x64 compatible, and is built with the following options using v0.9.3 of Donut at `./Misc/Donut.exe`:
+Koh has been built against .NET 4.7.2 and is compatible with Visual Studio 2019 Community Edition. Simply open up the project .sln, choose "Release", and build. The `Koh.exe` assembly and `Koh.bin` [Donut-built](https://github.com/TheWover/donut) PIC will be output to the main directory. The Donut blob is both x86/x64 compatible, and is built with the following options using v0.9.3 of Donut at `./Misc/Donut.exe`:
 
 ```
   [ Instance type : Embedded
@@ -368,7 +368,7 @@ beacon> shell dir \\dc.theshire.local\C$
 
 ## Technical Background
 
-When a new logon session is estabslished on a system, a new token for the logon session is created by LSASS using the NtCreateToken() API call and returned by to the caller of LsaLogonUser(). This [increases the ReferenceCount](https://systemroot.gitee.io/pages/apiexplorer/d0/d9/rmlogon_8c-source.html#l00278) field of the logon session kernel structure. When this ReferenceCount reaches 0, the logon session is destroyed. Because of the information described in the [Why This Is Possible](#why-this-is-possible) section, Windows systems **will NOT** release a logon session if a token handle still exists to it (and therefore the reference count != 0).
+When a new logon session is estabslished on a system, a new token for the logon session is created by LSASS using the NtCreateToken() API call and returned by the caller of LsaLogonUser(). This [increases the ReferenceCount](https://systemroot.gitee.io/pages/apiexplorer/d0/d9/rmlogon_8c-source.html#l00278) field of the logon session kernel structure. When this ReferenceCount reaches 0, the logon session is destroyed. Because of the information described in the [Why This Is Possible](#why-this-is-possible) section, Windows systems **will NOT** release a logon session if a token handle still exists to it (and therefore the reference count != 0).
 
 So if we can get a handle to a newly created logon session via a token, we can keep that logon session open and later impersonate that token to utilize any cached credentials it contains.
 
