@@ -35,6 +35,7 @@ Koh is licensed under the BSD 3-Clause license.
         - [Disadvantages](#disadvantages)
   - [The Inline Shenanigans Bug](#the-inline-shenanigans-bug)
   - [IOCs](#iocs)
+  - [Mitigations](#mitigations)
   - [TODO](#todo)
   
 
@@ -473,6 +474,24 @@ I'm sure that no attackers will change the indicators mentioned above.
 
 There are likely some RPC artifacts for the token capture that we're hoping to investigate. We will update this section of the README if we find any additional detection artifacts along these lines. Hooking of some of the possibly-uncommon APIs used by Koh ([LsaEnumerateLogonSessions](https://docs.microsoft.com/en-us/windows/win32/api/ntsecapi/nf-ntsecapi-lsaenumeratelogonsessions) or the specific AcquireCredentialsHandle/InitializeSecurityContext/AcceptSecurityContext, specifically using a LUID in [AcquireCredentialsHandle](https://docs.microsoft.com/en-us/windows/win32/secauthn/acquirecredentialshandle--general)) could be explored for effectiveness, but alas, I am not an EDR.
 
+
+## Mitigations
+
+After publishing the [Koh: The Token Stealer](https://posts.specterops.io/koh-the-token-stealer-41ca07a40ed6) post, I had a great [exchange](https://twitter.com/harmj0y/status/1545535785029345280) between [@cnotin](https://twitter.com/cnotin) and [@SteveSyfuhs](https://twitter.com/SteveSyfuhs) about what ended up being a partial mitigation for this approach.
+
+The [KB2871997](https://support.microsoft.com/en-us/topic/microsoft-security-advisory-update-to-improve-credentials-protection-and-management-may-13-2014-93434251-04ac-b7f3-52aa-9f951c14b649) patch introduced a `TokenLeakDetectDelaySecs` setting, which triggers the "_...clearing of any credentials of logged off users..._". By default in fact, members of the ["Protected Users Security Group"](https://docs.microsoft.com/en-us/windows-server/security/credentials-protection-and-management/protected-users-security-group) have this behavior enforced regardless of the registry setting. However, setting this to a non-zero value will clear ALL credentials out of memory when a user logs off. Specifically, as [Steve mentions:](https://twitter.com/SteveSyfuhs/status/1545822123926597632) `If set, it'll start a timer on a sessions *interactive* logoff event, and on fire will purge anything still tied to it. Off by default. Protected Users always on, with a default of 30s.`
+
+There are two important things to note in the above paragraph: "logoff event" and "interactive". This can result in some situations where a user's credential is NOT cleared:
+
+- If a credential is present via a `runas` or `runas /netonly` type spawn or something similar, there is no logoff event when the process stops and the credential/token can still be captured.
+- If the credential is present via an RDP session where the user just disconnects instead of logs out, there is no logoff event when the process stops and the credential/token can still be captured.
+
+(I need to test other logon situations like NetworkClearText.)
+
+However, if the user is in the "Protected Users Security Group" or `TokenLeakDetectDelaySecs` is non-zero, and the user actively logs off of an interactive or remote interactive (RDP) session, the credentials will be cleared. I need to program Koh to better deal with these specific types of situations.
+
+TL;DR you should really be using the "Protected Users Security Group" for sensitive users, and see if setting `TokenLeakDetectDelaySecs` to a value like 30 is doable in your environment.
+
 ## TODO
 
 * Additional testing in the lab and field. Possible concerns:
@@ -481,3 +500,4 @@ There are likely some RPC artifacts for the token capture that we're hoping to i
 * "Remote" client that allows for monitoring through the Koh named pipe remotely
 * Implement more clients (PowerShell, C#, C++, etc.)
 * Fix the [Inline Shenanigans Bug](#the-inline-shenanigans-bug)
+* Handle "Protected Users"/TokenLeakDetectDelaySecs situations better
