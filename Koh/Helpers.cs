@@ -207,6 +207,11 @@ namespace Koh
             }
         }
 
+        private static void CloseHandle(IntPtr hToken)
+        {
+            throw new NotImplementedException();
+        }
+
         public static bool IsSystem()
         {
             // Returns true if the current context is "NT AUTHORITY\SYSTEM"
